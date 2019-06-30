@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>微信扫码登陆</title>
+  <style>
+    * {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      -ms-box-sizing: border-box;
+      -o-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+
+    html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Open Sans', sans-serif;
+      background: #092756;
+      background: -moz-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -moz-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -moz-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+      background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -webkit-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -webkit-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+      background: -o-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -o-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -o-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+      background: -ms-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), -ms-linear-gradient(top, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), -ms-linear-gradient(-45deg, #670d10 0%, #092756 100%);
+      background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104, 128, 138, .4) 10%, rgba(138, 114, 76, 0) 40%), linear-gradient(to bottom, rgba(57, 173, 219, .25) 0%, rgba(42, 60, 87, .4) 100%), linear-gradient(135deg, #670d10 0%, #092756 100%);
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#3E1D6D', endColorstr='#092756', GradientType=1);
+    }
+
+    .login {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -150px 0 0 -150px;
+      width: 300px;
+      height: 300px;
+    }
+
+    #qrcode {
+      width: 300px;
+      height: 300px;
+      display: none;
+      box-shadow: 0 0 22px rgba(81, 81, 81, 0.8);
+    }
+
+    .loading {
+      width: 150px;
+      height: 15px;
+      margin: 0 auto;
+      margin-top: 100px;
+    }
+
+    .loading span {
+      display: inline-block;
+      width: 15px;
+      height: 100%;
+      margin-right: 5px;
+      background: lightgreen;
+      -webkit-transform-origin: right bottom;
+      -webkit-animation: load 1s ease infinite;
+    }
+
+    .loading span:last-child {
+      margin-right: 0px;
+    }
+
+    @-webkit-keyframes load {
+      0% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        -webkit-transform: rotate(90deg);
+      }
+    }
+
+    .loading span:nth-child(1) {
+      -webkit-animation-delay: 0.13s;
+    }
+
+    .loading span:nth-child(2) {
+      -webkit-animation-delay: 0.26s;
+    }
+
+    .loading span:nth-child(3) {
+      -webkit-animation-delay: 0.39s;
+    }
+
+    .loading span:nth-child(4) {
+      -webkit-animation-delay: 0.52s;
+    }
+
+    .loading span:nth-child(5) {
+      -webkit-animation-delay: 0.65s;
+    }
+
+    #code {
+      color: #fff;
+      width: 100%;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login">
+    <div class="loading">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+
+  <h1 id="code"></h1>
+  <script crossorigin="anonymous" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
+    src="https://lib.baomitu.com/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+    $(function () {
+      var login = function (code) {
+        $.ajax({
+          type: "POST",
+          url: "/api.php?action=login&code=" + code,
+          dataType: "json",
+          cache: !1,
+          timeout: 6e4,
+          success: function (r) {
+            if (r.status === 1) {
+              window.localStorage.id = r.result.id
+              window.localStorage.userinfo = JSON.stringify(r.result.userinfo)
+              $('#code').text('登陆成功')
+              window.location.href = "/index.php"
+            } else {
+              alert('很抱歉，登陆失败，请稍后刷新重试。')
+            }
+          },
+          error: function () {
+            alert('很抱歉，出错了，请稍后刷新重试！')
+          }
+        })
+      }
+
+      var getCode = function (uuid, last) {
+        $.ajax({
+          type: "GET",
+          url: "https://apio.xyz/weixin-login-php/weixin.php?uuid=" + uuid + (last ? '&last=' + last : ''),
+          dataType: "json",
+          cache: !1,
+          timeout: 6e4,
+          success: function (data) {
+            if (data.status === 405) {
+              $('#code').text('扫码成功，正在登陆...')
+              login(data.result.code)
+            } else if (data.status === 404) {
+              $('#code').text(data.msg.title + ', ' + data.msg.content)
+              getCode(uuid, data.result.wxErrCode)
+            } else if (data.status === 403) {
+              $('#code').text(data.msg.title + ', ' + data.msg.content)
+              getCode(uuid, data.result.wxErrCode)
+            } else if (data.status === 500) {
+              getUUID()
+            } else {
+              setTimeout(function () {
+                getCode(uuid)
+              }, 2000)
+            }
+          },
+          error: function () {
+            setTimeout(function () {
+              getCode(uuid)
+            }, 2000)
+          }
+        })
+      }
+
+      function loadImage(url, callback) {
+        var img = new Image(); //创建一个Image对象，实现图片的预下载
+        img.src = url;
+        img.onload = function () { //图片下载完毕时异步调用callback函数
+          callback.call(img); //将回调函数的this替换为Image对象
+        };
+      };
+
+      var getUUID = function (uuid) {
+        $.ajax({
+          type: "GET",
+          url: "https://apio.xyz/weixin-login-php/weixin.php?appid=wx2d1d6aa2f86768d7&redirect_uri=https://wyr.me/login",
+          dataType: "json",
+          cache: !1,
+          timeout: 6e4,
+          success: function (data) {
+            if (data.status === 1) {
+              var uuid = data.result.wxUUID
+              loadImage(data.result.imgData, function () {
+                $('.loading').hide()
+                this.id = 'qrcode'
+                $('.login').append(this)
+                $('#qrcode').show()
+              })
+              getCode(uuid)
+            } else {
+              setTimeout(function () {
+                window.location.reload();
+              }, 2000)
+            }
+          },
+          error: function () {
+            setTimeout(function () {
+              window.location.reload();
+            }, 2000)
+          }
+        })
+      }
+
+      getUUID()
+    });
+  </script>
+</body>
+
+</html>
