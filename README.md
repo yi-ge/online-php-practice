@@ -2,7 +2,7 @@
 
 > 在线 PHP 练习平台
 
-在线体验：[https://yige.ink](https://yige.ink)
+在线体验：[https://php.yige.ink](https://php.yige.ink)
 
 ![预览图](preview.png)
 
